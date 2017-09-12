@@ -1,5 +1,7 @@
 # Geocoder
 
+A small utility script for geocoding addresses in a csv file.
+
 ### Installation
 
 Clone the repository
