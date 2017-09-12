@@ -5,13 +5,13 @@
 Clone the repository
 
 ```bash
-$ git clone git@github.com:wbkd/geocoder.git && cd geocoder
+git clone git@github.com:wbkd/geocoder.git && cd geocoder
 ```
 
 Install dependencies
 
 ```bash
-$ npm install # with node version 7 or higher
+npm install # with node version 7 or higher
 ```
 
 ### Customization
@@ -29,5 +29,5 @@ const GOOGLE_API_KEY = 'YOUR_API_KEY'; // your google geocoder api key: https://
 ### Run the script!
 
 ```bash
-$ npm start
+npm start
 ```
