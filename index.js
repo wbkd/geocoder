@@ -1,33 +1,65 @@
-const INPUT_CSV = 'input/test.csv';
-const OUTPUT_CSV = 'output/test.csv';
-const ADDRESS_COLUMN = 'adresse';
-const SEPARATOR = ';';
+const INPUT_CSV = 'input/test.csv'; // location of the input csv file
+const OUTPUT_CSV = 'output/test.csv'; // location where to store the result
+const ADDRESS_COLUMN = 'adresse'; // the name of the field in the csv that stores the address string
+const DELIMITER = ';'; // the csv file delimiter
+const GOOGLE_API_KEY = 'YOUR_API_KEY'; // your google geocoder api key: https://developers.google.com/maps/documentation/geocoding/start?hl=de#get-a-key
 
 const fs = require('fs');
 const path = require('path');
 const dsv = require('d3-dsv');
 const axios = require('axios');
+const idx = require('idx');
 
 const inputPath = path.resolve(__dirname, INPUT_CSV);
 const outputPath = path.resolve(__dirname, OUTPUT_CSV);
 
-const csvParser = dsv.dsvFormat(SEPARATOR);
+const csvParser = dsv.dsvFormat(DELIMITER);
 
 const data = csvParser.parse(fs.readFileSync(inputPath).toString());
 
 async function geocodeRow(row) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      row.test = Math.random();
-      console.log(row);
-      resolve(row);
-    }, 100);
+    const address = row[ADDRESS_COLUMN];
+    row.lat = '';
+    row.lng = '';
+    row.address_clean = '';
+
+    if (!address) {
+      return resolve(row);
+    }
+
+    console.log('geocoding address:', address);
+
+    const addressWithoutUmlauts = address
+      .replace(/\s/g, '+')
+      .replace(/ß/g, 'ss')
+      .replace(/ö|Ö/, 'oe')
+      .replace(/ü|Ü/, 'ue')
+      .replace(/ä|Ä/, 'ae');
+
+    axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${addressWithoutUmlauts}&key=${GOOGLE_API_KEY}`)
+      .then(res => {
+        row.lat = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
+        row.lng = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
+        row.address_clean = idx(res.data, _ => _.results[0].formatted_address) || '';
+
+        resolve(row);
+      })
+      .catch(err => {
+        resolve(row);
+      })
   });
 }
 
 (async () => {
+  let successCounter = 0;
+
   for (let row of data) {
     row = await geocodeRow(row);
+    
+    if (row.address_clean !== '') {
+      successCounter++;
+    }
   }
   
   const output = csvParser.format(data);
@@ -37,6 +69,6 @@ async function geocodeRow(row) {
       throw err;
     }
 
-    console.log('done.');
+    console.log(`${successCounter} of ${data.length} rows geocoded and written to: ${OUTPUT_CSV}`);
   });
 })();
