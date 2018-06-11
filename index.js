@@ -3,6 +3,7 @@ const OUTPUT_CSV = 'output/test.csv'; // location where to store the result
 const ADDRESS_COLUMN = 'adresse'; // the name of the field in the csv that stores the address string
 const DELIMITER = ';'; // the csv file delimiter
 const GOOGLE_API_KEY = 'YOUR_API_KEY'; // your google geocoder api key: https://developers.google.com/maps/documentation/geocoding/start?hl=de#get-a-key
+const ADD_CLEAN_ADRESS_ROW = false;
 
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +23,10 @@ async function geocodeRow(row) {
     const address = row[ADDRESS_COLUMN];
     row.lat = '';
     row.lng = '';
-    row.address_clean = '';
+
+    if (ADD_CLEAN_ADRESS_ROW) {
+      row.address_clean = '';
+    }
 
     if (!address) {
       return resolve(row);
@@ -40,8 +44,11 @@ async function geocodeRow(row) {
     axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${addressWithoutUmlauts}&key=${GOOGLE_API_KEY}`)
       .then(res => {
         row.lat = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
-        row.lng = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
-        row.address_clean = idx(res.data, _ => _.results[0].formatted_address) || '';
+        row.lng = idx(res.data, _ => _.results[0].geometry.location.lng) || '';
+
+        if (ADD_CLEAN_ADRESS_ROW) {
+          row.address_clean = idx(res.data, _ => _.results[0].formatted_address) || '';
+        }
 
         resolve(row);
       })
@@ -56,12 +63,11 @@ async function geocodeRow(row) {
 
   for (let row of data) {
     row = await geocodeRow(row);
-    
-    if (row.address_clean !== '') {
+    if (row.lat && row.lng) {
       successCounter++;
     }
   }
-  
+
   const output = csvParser.format(data);
 
   fs.writeFile(outputPath, output, err => {
