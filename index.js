@@ -40,7 +40,7 @@ async function geocodeRow(row) {
     axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${addressWithoutUmlauts}&key=${GOOGLE_API_KEY}`)
       .then(res => {
         row.lat = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
-        row.lng = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
+        row.lng = idx(res.data, _ => _.results[0].geometry.location.lng) || '';
         row.address_clean = idx(res.data, _ => _.results[0].formatted_address) || '';
 
         resolve(row);
