@@ -37,9 +37,9 @@ async function geocodeRow(row) {
     const cleanedAddress = address
       .replace(/\s/g, '+')
       .replace(/ß/g, 'ss')
-      .replace(/ö|Ö/, 'oe')
-      .replace(/ü|Ü/, 'ue')
-      .replace(/ä|Ä/, 'ae');
+      .replace(/ö|Ö/g, 'oe')
+      .replace(/ü|Ü/g, 'ue')
+      .replace(/ä|Ä/g, 'ae');
 
     axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${cleanedAddress}&key=${GOOGLE_API_KEY}`)
       .then(res => {
