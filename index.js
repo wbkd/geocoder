@@ -34,14 +34,14 @@ async function geocodeRow(row) {
 
     console.log('geocoding address:', address);
 
-    const addressWithoutUmlauts = address
+    const cleanedAddress = address
       .replace(/\s/g, '+')
       .replace(/ß/g, 'ss')
       .replace(/ö|Ö/, 'oe')
       .replace(/ü|Ü/, 'ue')
       .replace(/ä|Ä/, 'ae');
 
-    axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${addressWithoutUmlauts}&key=${GOOGLE_API_KEY}`)
+    axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${cleanedAddress}&key=${GOOGLE_API_KEY}`)
       .then(res => {
         row.lat = idx(res.data, _ => _.results[0].geometry.location.lat) || '';
         row.lng = idx(res.data, _ => _.results[0].geometry.location.lng) || '';
